@@ -1,0 +1,37 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      # path '.': the pnpm lockfile lives at the workspace root, and the action only looks
+      # for a lockfile directly inside `path` (DESIGN.md §17, item 2).
+      - name: Build and upload
+        uses: withastro/action@v6
+        with:
+          path: .
+          out-dir: site/dist
+          cache-dir: site/node_modules/.astro
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -178,12 +178,21 @@ MVP에서 검색 품질이 부족하면 Algolia DocSearch를 검토한다.
 
 콘텐츠를 쓰기 전에 아래 항목을 실제로 실행해서 확인한다.
 
-1. **`?raw` import 경로**: `site/`가 `godot/`와 `unity/` 파일을 dev와 build 모두에서 import하는지 확인한다. 워크스페이스 루트 인식이나 `vite.server.fs.allow`가 필요할 수 있다. `allow`를 직접 설정하면 워크스페이스 자동 인식이 꺼지므로 `searchForWorkspaceRoot`를 함께 넣는다.
-2. **배포 액션과 lockfile 위치**: `withastro/action`은 `path` 폴더 안에서만 lockfile을 찾는다. pnpm 워크스페이스에서는 lockfile이 루트에 있어서 이 액션이 실패할 수 있다. 그렇다면 직접 빌드 단계를 짜고 `actions/upload-pages-artifact` + `actions/deploy-pages`로 배포한다.
+1. **`?raw` import 경로** — **확인됨 (2026-09-28)**: `site/src/components/Snippet.astro`가 `import.meta.glob`으로 `godot/`와 `unity/` 파일을 `?raw`로 읽는다. `vite.server.fs.allow` 설정 없이 dev 서버와 `pnpm build` 모두에서 동작했다(Astro 7.3, pnpm 워크스페이스).
+   - `#region` 발췌와 `gdscript`/`csharp` 하이라이트도 정상이었다.
+   - 코드 탭 선택은 새로고침 뒤에도 유지됐다.
+   - 없는 파일이나 region을 가리키면 빌드가 실패한다.
+2. **배포 액션과 lockfile 위치** — **해결 (첫 push 때 실행 확인)**: `path: site`로 두면 `withastro/action`의 lockfile 검사가 "No lockfile found"로 실패한다. 이 검사를 로컬에서 재현해서 확인했다. 그래서 `.github/workflows/deploy.yml`에 세 가지를 지정했다.
+   - `path: .`: 루트의 `pnpm-lock.yaml`과 `packageManager`를 사용한다.
+   - `out-dir: site/dist`
+   - `cache-dir: site/node_modules/.astro`
+   - 빌드는 루트의 `pnpm run build`(`pnpm --filter site build`)가 맡는다.
 3. **GDScript 검사**:
    - 새로 체크아웃한 CI에는 `.godot/`가 없다. 먼저 `godot --headless --import`로 `class_name` 캐시를 만들어야 파일 간 참조가 해결되는지 확인한다.
    - 오토로드를 참조할 때 오탐이 나는 이슈(#78587, #111515)가 발생하는지 확인한다.
 4. **Godot C# 이름 충돌**: 모듈별 네임스페이스로 스니펫의 타입 이름 충돌이 막히는지 확인한다. 같은 이름의 `[GlobalClass]`가 전역 클래스 목록에서 충돌하는지도 본다.
+   - 지금까지 확인한 것(2026-09-28): 파일 범위 네임스페이스와 `partial`을 쓴 스니펫 1개가 `Godot.NET.Sdk/4.7.2`의 `dotnet build`를 경고 0개로 통과했다.
+   - 이름이 겹치는 경우는 아직 시험하지 않았다.
 5. **Pagefind 한국어 검색**: 조사 단계의 결론은 소스를 읽고 내린 추론이다. 실제 빌드에서 조사가 붙은 단어("노드를")와 복합어를 검색해 본다.
 6. **GitHub Pages base 경로**: `base: '/godot-for-unity-devs'`가 사이드바 링크, Pagefind 경로, 웹 데모 경로와 충돌하지 않는지 확인한다.
 7. **웹 데모 내보내기**:

@@ -1,0 +1,25 @@
+---
+title: '스파이크: Snippet 발췌'
+description: site/ 밖의 godot/, unity/ 파일을 ?raw로 읽어 #region 단위로 보여주는지 확인하는 페이지
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import Snippet from '../../../components/Snippet.astro';
+
+`site/` 밖에 있는 실제 파일에서 `#region` 블록만 잘라 코드 탭으로 보여줍니다. 탭을 바꾸면 선택이 다른 페이지에도 유지됩니다.
+
+<Tabs syncKey="lang">
+	<TabItem label="Unity C#">
+		<Snippet file="unity/04-lifecycle/Mover.cs" region="update" />
+	</TabItem>
+	<TabItem label="GDScript">
+		<Snippet file="godot/snippets/04-lifecycle/mover.gd" region="process" />
+	</TabItem>
+	<TabItem label="Godot C#">
+		<Snippet file="godot/snippets/04-lifecycle/Mover.cs" region="process" />
+	</TabItem>
+</Tabs>
+
+## 파일 전체 (region 생략)
+
+<Snippet file="godot/snippets/04-lifecycle/mover.gd" />

@@ -1,0 +1,11 @@
+node_modules/
+
+# Godot
+.godot/
+*.translation
+export/
+
+# Godot C# build output
+.mono/
+bin/
+obj/
